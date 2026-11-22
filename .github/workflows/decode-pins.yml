@@ -1,0 +1,41 @@
+name: Decode pin images
+
+on:
+  push:
+    paths:
+      - "encoded/**"
+      - ".github/workflows/decode-pins.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode archives into pins/
+        run: |
+          set -euo pipefail
+          mkdir -p pins
+          shopt -s nullglob
+          for f in encoded/*.tar.b64; do
+            echo "Decoding $f"
+            base64 -d "$f" | tar -C . -xf -
+          done
+          find pins -type f -name '*.png' | sort | while read -r p; do
+            echo "$p $(wc -c < "$p")"
+          done
+      - name: Commit PNG stills
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pins
+          if git diff --cached --quiet; then
+            echo "No new PNGs to commit"
+            exit 0
+          fi
+          git commit -m "Add decoded pin PNG stills for batch 01"
+          git push
