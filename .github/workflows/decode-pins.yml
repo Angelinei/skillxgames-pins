@@ -24,7 +24,7 @@ jobs:
             echo "Decoding $f"
             base64 -d "$f" | tar -C . -xf -
           done
-          find pins -type f -name '*.png' | sort | while read -r p; do
+          find pins battle -type f -name '*.png' 2>/dev/null | sort | while read -r p; do
             echo "$p $(wc -c < "$p")"
           done
       - name: Commit PNG stills
@@ -32,10 +32,10 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pins
+          git add pins battle
           if git diff --cached --quiet; then
             echo "No new PNGs to commit"
             exit 0
           fi
-          git commit -m "Add decoded pin PNG stills for batch 01"
+          git commit -m "Add decoded pin PNG stills"
           git push
